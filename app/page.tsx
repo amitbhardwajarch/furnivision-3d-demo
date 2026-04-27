@@ -1,6 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
+
+const Room3D = dynamic(() => import("./components/Room3D"), { ssr: false });
 
 type FurnitureItem = {
   id: string;
@@ -76,12 +79,12 @@ const library = [
 ];
 
 const catalog = [
-  ["Signature Cloud Sofa", "₹1,85,000", "Beige boucle fabric", "8ft x 3.2ft", "Living"],
-  ["Imperial Walnut Dining Table", "₹2,40,000", "Solid walnut", "8-seater", "Dining"],
-  ["Milano Recliner", "₹92,000", "Italian leather", "3.5ft x 3ft", "Lounge"],
-  ["Royale King Bed", "₹2,85,000", "Luxury upholstered frame", "King size", "Bedroom"],
-  ["Arcadia Wardrobe", "₹1,75,000", "Walnut veneer", "9ft x 7ft", "Storage"],
-  ["Executive Office Chair", "₹58,000", "Leather ergonomic", "Adjustable", "Office"],
+  ["Signature Cloud Sofa", "₹1,85,000", "Beige boucle fabric", "8ft x 3.2ft", "Living", "/products/sofa.jpg"],
+  ["Imperial Walnut Dining Table", "₹2,40,000", "Solid walnut", "8-seater", "Dining", ""],
+  ["Milano Recliner", "₹92,000", "Italian leather", "3.5ft x 3ft", "Lounge", ""],
+  ["Royale King Bed", "₹2,85,000", "Luxury upholstered frame", "King size", "Bedroom", ""],
+  ["Arcadia Wardrobe", "₹1,75,000", "Walnut veneer", "9ft x 7ft", "Storage", ""],
+  ["Velvet Accent Chair", "₹74,000", "Premium velvet finish", "3ft x 3ft", "Living", "/products/accent-chair.jpg"],
 ];
 
 function rupee(value: number) {
@@ -101,6 +104,7 @@ export default function Home() {
       price: 185000,
       priceLabel: "₹1,85,000",
       type: "sofa",
+      image: "/products/sofa.jpg",
       x: 45,
       y: 58,
       rotate: 0,
@@ -126,9 +130,9 @@ export default function Home() {
       priceLabel: "₹15,000",
       type: "rug",
       x: 50,
-      y: 80,
+      y: 82,
       rotate: 0,
-      scale: 1,
+      scale: 1.1,
     },
   ]);
 
@@ -142,24 +146,24 @@ export default function Home() {
 
   const cartLabel = useMemo(() => (cart > 0 ? `Cart (${cart})` : "Cart"), [cart]);
 
- function placeItem(product: (typeof library)[number]) {
-  const newItem: FurnitureItem = {
-    id: `${product.type}-${Date.now()}`,
-    name: product.name,
-    shortName: product.shortName,
-    price: product.price,
-    priceLabel: product.priceLabel,
-    type: product.type,
-    image: product.image,
-    x: 38 + Math.random() * 24,
-    y: 48 + Math.random() * 28,
-    rotate: 0,
-    scale: 1,
-  };
+  function placeItem(product: (typeof library)[number]) {
+    const newItem: FurnitureItem = {
+      id: `${product.type}-${Date.now()}`,
+      name: product.name,
+      shortName: product.shortName,
+      price: product.price,
+      priceLabel: product.priceLabel,
+      type: product.type,
+      image: product.image,
+      x: 38 + Math.random() * 24,
+      y: 48 + Math.random() * 28,
+      rotate: 0,
+      scale: 1,
+    };
 
-  setItems((current) => [...current, newItem]);
-  setSelectedId(newItem.id);
-}
+    setItems((current) => [...current, newItem]);
+    setSelectedId(newItem.id);
+  }
 
   function updateSelected(update: Partial<FurnitureItem>) {
     if (!selected) return;
@@ -170,6 +174,7 @@ export default function Home() {
 
   function moveSelected(dx: number, dy: number) {
     if (!selected) return;
+
     updateSelected({
       x: Math.min(92, Math.max(8, selected.x + dx)),
       y: Math.min(92, Math.max(18, selected.y + dy)),
@@ -178,8 +183,10 @@ export default function Home() {
 
   function removeSelected() {
     if (!selected) return;
-    setItems((current) => current.filter((item) => item.id !== selected.id));
-    setSelectedId(items[0]?.id || "");
+
+    const remaining = items.filter((item) => item.id !== selected.id);
+    setItems(remaining);
+    setSelectedId(remaining[0]?.id || "");
   }
 
   function applyAiDesign() {
@@ -191,6 +198,7 @@ export default function Home() {
         price: 185000,
         priceLabel: "₹1,85,000",
         type: "sofa",
+        image: "/products/sofa.jpg",
         x: 44,
         y: 58,
         rotate: 0,
@@ -251,6 +259,7 @@ export default function Home() {
         price: 74000,
         priceLabel: "₹74,000",
         type: "chair",
+        image: "/products/accent-chair.jpg",
         x: 24,
         y: 66,
         rotate: -12,
@@ -289,6 +298,7 @@ export default function Home() {
               <p className="mb-4 inline-flex rounded-full border border-[#d6b37a]/40 bg-[#d6b37a]/10 px-4 py-2 text-sm font-semibold text-[#d6b37a]">
                 Luxury AI-Powered 3D Furniture Commerce
               </p>
+
               <h1 className="text-5xl font-black leading-tight md:text-7xl">
                 Luxury Furniture.
                 <span className="block text-[#d6b37a]">Placed Inside Your Room.</span>
@@ -296,9 +306,13 @@ export default function Home() {
             </div>
 
             <p className="text-lg leading-8 text-white/70">
-              Interactive customer demo: select furniture, place it into the room, move,
-              rotate, resize, remove, apply AI design, and add the complete room to cart.
+              Customer-ready demo with real 3D viewer, visual room planner, AI design
+              recommendation, product catalog, and complete-room checkout flow.
             </p>
+          </div>
+
+          <div className="mb-8">
+            <Room3D onAddToCart={() => setCart((v) => v + 6)} />
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-[#1a1714]/95 p-4 shadow-2xl shadow-black/40">
@@ -332,9 +346,21 @@ export default function Home() {
                       onClick={() => placeItem(product)}
                       className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-left transition hover:border-[#d6b37a]/60 hover:bg-[#d6b37a]/10"
                     >
-                      <div className="text-xs font-bold">{product.name}</div>
-                      <div className="mt-1 text-xs text-[#d6b37a]">{product.priceLabel}</div>
-                      <div className="mt-2 text-[10px] text-white/35">Click to place</div>
+                      <div className="flex gap-3">
+                        <div className="h-16 w-16 overflow-hidden rounded-xl bg-[#2a211b]">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-lg text-[#d6b37a]">◆</div>
+                          )}
+                        </div>
+
+                        <div>
+                          <div className="text-xs font-bold">{product.name}</div>
+                          <div className="mt-1 text-xs text-[#d6b37a]">{product.priceLabel}</div>
+                          <div className="mt-2 text-[10px] text-white/35">Click to place</div>
+                        </div>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -342,7 +368,7 @@ export default function Home() {
 
               <section className="relative min-h-[620px] overflow-hidden rounded-3xl border border-[#d6b37a]/20 bg-[#e8dfd1]">
                 <div className="absolute left-5 top-5 z-20 rounded-2xl bg-[#11100f]/80 px-4 py-3 text-sm font-bold text-[#d6b37a] backdrop-blur">
-                  {roomPreset} Simulation Canvas
+                  {roomPreset} Visual Planner
                 </div>
 
                 <div className="absolute inset-x-0 top-0 h-[43%] bg-gradient-to-b from-[#d8c8b6] to-[#efe7dc]" />
@@ -457,6 +483,7 @@ export default function Home() {
                   {rupee(total)} · {items.length} selected items
                 </div>
               </div>
+
               <button
                 onClick={() => setCart((v) => v + items.length)}
                 className="rounded-2xl bg-[#d6b37a] px-8 py-4 font-black text-[#15110e]"
@@ -478,12 +505,14 @@ export default function Home() {
               <div className="rounded-2xl bg-white/10 p-4 text-white/80">
                 Create a luxury modern living room under ₹5,00,000 with beige, walnut and gold accents.
               </div>
+
               <div className="mt-4 rounded-2xl border border-[#d6b37a]/30 bg-[#d6b37a]/10 p-4">
                 AI recommends: Signature Cloud Sofa, Siena Coffee Table, Aurelia Floor Lamp,
                 Velvet Accent Chair, Modular TV Console, and Handwoven Rug.
                 <br /><br />
                 Estimated total: <b className="text-[#d6b37a]">₹4,72,000</b>. Budget fit confirmed.
               </div>
+
               <button onClick={applyAiDesign} className="mt-5 rounded-xl bg-[#d6b37a] px-6 py-3 font-black text-[#15110e]">
                 Apply AI Design to Room
               </button>
@@ -491,6 +520,7 @@ export default function Home() {
 
             <div className="rounded-3xl bg-black/25 p-6">
               <h3 className="text-xl font-black">Customer Experience Impact</h3>
+
               <div className="mt-6 grid grid-cols-2 gap-3">
                 {["Lower purchase doubt", "Higher cart value", "Complete room packages", "Premium digital experience"].map((x) => (
                   <div key={x} className="rounded-2xl bg-white/[.06] p-4 text-sm font-bold">{x}</div>
@@ -507,6 +537,7 @@ export default function Home() {
             <p className="text-sm font-bold text-[#d6b37a]">Luxury Collection</p>
             <h2 className="mt-2 text-4xl font-black">Premium Furniture Catalog</h2>
           </div>
+
           <div className="flex flex-wrap gap-2 text-xs">
             {["Room", "Style", "Material", "Color", "Price"].map((f) => (
               <span key={f} className="rounded-full border border-white/10 bg-white/[.06] px-4 py-2">{f}</span>
@@ -515,20 +546,28 @@ export default function Home() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {catalog.map(([name, price, material, dimension, tag]) => (
+          {catalog.map(([name, price, material, dimension, tag, image]) => (
             <article key={name} className="rounded-3xl border border-white/10 bg-white/[.06] p-5 shadow-xl transition hover:-translate-y-1 hover:border-[#d6b37a]/50">
-              <div className="mb-4 flex h-44 items-end justify-center rounded-2xl bg-gradient-to-br from-[#efe4d3] to-[#a57947] p-6">
-                <div className="h-20 w-52 rounded-t-[2rem] rounded-b-xl bg-[#e7d4b8] shadow-2xl" />
+              <div className="mb-4 flex h-44 items-end justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#efe4d3] to-[#a57947]">
+                {image ? (
+                  <img src={image} alt={name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-20 w-52 rounded-t-[2rem] rounded-b-xl bg-[#e7d4b8] shadow-2xl" />
+                )}
               </div>
+
               <div className="flex items-center justify-between">
                 <span className="rounded-full bg-[#d6b37a]/15 px-3 py-1 text-xs font-bold text-[#d6b37a]">{tag}</span>
                 <span className="text-sm">⭐ 4.8</span>
               </div>
+
               <h3 className="mt-4 text-xl font-black">{name}</h3>
               <p className="mt-2 text-sm text-white/60">{material}</p>
               <p className="mt-1 text-sm text-white/45">{dimension}</p>
+
               <div className="mt-5 flex items-center justify-between">
                 <strong className="text-xl text-[#d6b37a]">{price}</strong>
+
                 <div className="flex gap-2">
                   <button className="rounded-xl border border-white/10 px-3 py-2 text-xs">View in 3D</button>
                   <button onClick={() => setCart((v) => v + 1)} className="rounded-xl bg-[#d6b37a] px-3 py-2 text-xs font-bold text-[#15110e]">
@@ -545,6 +584,7 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1fr_.8fr]">
           <div className="rounded-[2rem] border border-white/10 bg-white/[.06] p-8">
             <h2 className="text-4xl font-black">Complete Room Checkout</h2>
+
             <div className="mt-6 space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="flex justify-between rounded-2xl bg-black/20 p-4">
@@ -554,13 +594,17 @@ export default function Home() {
               ))}
             </div>
           </div>
+
           <div className="rounded-[2rem] border border-[#d6b37a]/30 bg-[#d6b37a]/10 p-8">
             <p className="text-white/60">Delivery + Installation</p>
             <h3 className="mt-2 text-3xl font-black">Included</h3>
+
             <p className="mt-6 text-white/60">Warranty</p>
             <h3 className="mt-2 text-3xl font-black">5 Years</h3>
+
             <p className="mt-8 text-white/60">Total</p>
             <h3 className="text-5xl font-black text-[#d6b37a]">{rupee(total)}</h3>
+
             <button className="mt-8 w-full rounded-xl bg-[#d6b37a] px-6 py-4 font-black text-[#15110e]">
               Proceed to Luxury Checkout
             </button>
@@ -571,6 +615,7 @@ export default function Home() {
       <section id="architecture" className="mx-auto max-w-7xl px-6 py-20">
         <p className="text-sm font-bold text-[#d6b37a]">Enterprise Architecture</p>
         <h2 className="mt-2 text-4xl font-black">Azure-Ready Platform Blueprint</h2>
+
         <div className="mt-8 grid gap-4 md:grid-cols-4">
           {[
             "Customer Web App",
@@ -630,14 +675,29 @@ function PlacedFurniture({
         </>
       )}
 
-      {item.type === "sofa" && <Sofa label={item.shortName} />}
+      {item.type === "sofa" && item.image ? <ImageFurniture item={item} wide /> : item.type === "sofa" && <Sofa label={item.shortName} />}
+      {item.type === "chair" && item.image ? <ImageFurniture item={item} /> : item.type === "chair" && <Chair label={item.shortName} />}
       {item.type === "table" && <Table label={item.shortName} />}
       {item.type === "rug" && <Rug label={item.shortName} />}
       {item.type === "lamp" && <Lamp label={item.shortName} />}
       {item.type === "tv" && <TvUnit label={item.shortName} />}
-      {item.type === "chair" && <Chair label={item.shortName} />}
       {item.type === "bed" && <Bed label={item.shortName} />}
     </button>
+  );
+}
+
+function ImageFurniture({ item, wide = false }: { item: FurnitureItem; wide?: boolean }) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-3xl border border-[#d6b37a]/40 bg-white shadow-2xl ${
+        wide ? "h-36 w-72" : "h-32 w-32"
+      }`}
+    >
+      <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-xs font-black text-white">
+        {item.shortName}
+      </div>
+    </div>
   );
 }
 
