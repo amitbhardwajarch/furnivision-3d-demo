@@ -140,7 +140,8 @@ function RoomShell({ room }: any) {
 }
 
 function GLBModel({ product, position, rotation }: any) {
-  const { scene } = useGLTF(product.modelPath);
+  const gltf = useGLTF(product.modelPath) as any;
+  const scene = gltf.scene;
   const model = useMemo(() => scene.clone(true), [scene]);
 
   useEffect(() => {
